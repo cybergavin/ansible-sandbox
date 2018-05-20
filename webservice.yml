@@ -1,0 +1,43 @@
+---
+- name: Enable Web Service
+  hosts: centos7-1
+  become: yes
+  tasks:
+      - name: Ensure that the latest version of all required packages is installed
+        yum:
+          name:
+            - firewalld
+            - httpd
+            - php
+            - php-mysql
+          state: latest
+
+      - name: Ensure that the required services are enabled and started
+        service:
+          name:
+            - firewalld
+            - httpd 
+          enabled: true
+          state: started
+
+      - name: Ensure that the firewall permits HTTP 
+        firewalld: 
+          service: http
+          state: enabled
+          permanent: true
+          immediate: yes
+
+      - name: Deploy test page
+        copy:
+          content: "<?php phpinfo(); ?>" 
+          dest: /var/www/html/index.php
+          mode: u=rw,g=r,o=r
+
+- name: Test Web Service 
+  hosts: localhost
+  become: no
+  tasks:
+    - name: Access test web page
+      uri: 
+        url: http://centos7-1
+        status_code: 200
