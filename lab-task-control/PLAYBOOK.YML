@@ -1,0 +1,50 @@
+# This YAML file is part of a Red Hat Self-Paced Lab (RHSPL) held during Red Hat Summit 2018.
+# It is used for the chapter on "Implementing Task Control"
+#
+#############################################################################################################
+---
+- name: This play is a result of the RHSPL for implementing task control
+  hosts: c7
+  become: yes
+  tasks:
+    - name: Execute block
+      block:
+        - include: install_packages.yml
+          vars:
+            web_package: httpd
+            ssl_package: mod_ssl
+            web_service: httpd
+            memory: 300
+
+        - include: configure_web.yml
+          
+        - include: configure_firewall.yml
+          vars:
+            fw_package: firewalld
+            fw_service: firewalld
+          tags: production
+
+    - name: Perform rescue, if required
+      rescue:
+        - yum:
+            name: httpd
+            state: latest
+          notify:
+            - restart_Services
+      
+        - debug:
+            msg: "Failed to run tasks; installing the web server manually" 
+    
+    - name: Always perform this
+      always:
+        - shell:
+            cmd: "systemctl status httpd" 
+
+  handlers:
+    - name: restart_Services
+      service:
+        name: "{{ item }}" 
+        state: restarted
+      with_items:
+        - httpd 
+        - firewalld 

@@ -1,0 +1,20 @@
+# This YAML file is part of a Red Hat Self-Paced Lab (RHSPL) held during Red Hat Summit 2018.
+# It is used for the chapter on "Implementing Task Control"
+#
+#############################################################################################################
+---
+- name: Ensure that web server packages are installed.
+  yum:
+    name: "{{ item }}"
+    state: latest
+  with_items: 
+    - "{{ web_package }}"
+    - "{{ ssl_package }}"
+  when:
+    - ansible_hostname in groups["c6"]
+    - "(ansible_memory_mb.real.free) > (memory)"
+
+- name: Start the web service
+  service:
+    name: "{{ web_service }}"
+    state: started
